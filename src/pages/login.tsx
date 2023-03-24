@@ -1,17 +1,41 @@
 import { login, loginUrl } from '@/services/use-auth';
+import axios from 'axios';
 import type { NextPage } from 'next';
 import Link from 'next/link';
-import { FormEvent } from 'react';
+import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
 import useSWRMutation from 'swr/mutation';
 
+type data = {
+  username: string;
+  password: string;
+};
+
 const Login: NextPage = () => {
+  const {
+    register,
+    setValue,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<data>();
+
   const { trigger } = useSWRMutation(loginUrl, login);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    trigger({ formData: data });
-  };
+  const onSubmit = handleSubmit(async ({ username, password }) => {
+    try {
+      let formData = new FormData();
+      formData.append('username', username);
+      formData.append('password', password);
+
+      await trigger({ formData });
+    } catch (error: unknown) {
+      let errorMessage = 'Oops, something went wrong!';
+      if (axios.isAxiosError(error)) {
+        errorMessage = error?.response?.data.detail;
+      }
+      toast.error(errorMessage);
+    }
+  });
 
   return (
     <div className="flex items-center justify-center h-screen mx-auto">
@@ -28,24 +52,32 @@ const Login: NextPage = () => {
             </span>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-6 m-auto max-w-xs">
+          <form onSubmit={onSubmit} className="mt-6 m-auto max-w-xs">
             <div>
               <input
                 className="h-10 w-full border-b-2 pl-2 text-sm"
                 type="email"
-                name="username"
                 placeholder="Email"
+                {...register('username', { required: true })}
               />
             </div>
+            {errors.username && <span>This field is required</span>}
+
             <div className="mt-2">
               <input
                 className="h-10 w-full border-b-2 pl-2 text-sm"
                 type="password"
-                name="password"
                 placeholder="Password"
+                {...register('password', { required: true })}
               />
             </div>
-            <button className="w-full h-9 mt-4 bg-black text-white text-sm rounded">
+
+            {errors.password && <span>This field is required</span>}
+
+            <button
+              type="submit"
+              className="w-full h-9 mt-4 bg-black text-white text-sm rounded"
+            >
               Log in
             </button>
 
