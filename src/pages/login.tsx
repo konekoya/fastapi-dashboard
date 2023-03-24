@@ -1,7 +1,9 @@
 import { login, loginUrl } from '@/services/use-auth';
 import axios from 'axios';
+import clsx from 'clsx';
 import type { NextPage } from 'next';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import useSWRMutation from 'swr/mutation';
@@ -14,10 +16,11 @@ type data = {
 const Login: NextPage = () => {
   const {
     register,
-    setValue,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<data>();
+  const router = useRouter();
 
   const { trigger } = useSWRMutation(loginUrl, login);
 
@@ -26,8 +29,10 @@ const Login: NextPage = () => {
       let formData = new FormData();
       formData.append('username', username);
       formData.append('password', password);
-
       await trigger({ formData });
+      reset();
+
+      router.push('/dashboard');
     } catch (error: unknown) {
       let errorMessage = 'Oops, something went wrong!';
       if (axios.isAxiosError(error)) {
@@ -39,7 +44,7 @@ const Login: NextPage = () => {
 
   return (
     <div className="flex items-center justify-center h-screen mx-auto">
-      <div className="flex bg-white w-2/3 max-w-3xl max-h-96 drop-shadow-xl">
+      <div className="flex bg-white w-2/3 max-w-3xl min-h-[26rem] drop-shadow-xl">
         <div className="w-2/4 p-6 border-r-4 border-r-gray-50">
           <h1 className="font-logo text-xl uppercase">
             <span className="text-yellow-400 font-black">_</span>Dashboard
@@ -55,24 +60,40 @@ const Login: NextPage = () => {
           <form onSubmit={onSubmit} className="mt-6 m-auto max-w-xs">
             <div>
               <input
-                className="h-10 w-full border-b-2 pl-2 text-sm"
+                className={clsx(
+                  'h-10 w-full rounded-sm border-b-2 pl-2 text-sm focus:outline-2 focus:outline-blue-400',
+                  errors.username &&
+                    'text-red-600 placeholder-red-700 ring-1 ring-red-500 border-b-0 focus:outline-2 focus:outline-red-500'
+                )}
                 type="email"
                 placeholder="Email"
                 {...register('username', { required: true })}
               />
             </div>
-            {errors.username && <span>This field is required</span>}
+            {errors.username && (
+              <span className="text-sm text-red-600">
+                This field is required
+              </span>
+            )}
 
             <div className="mt-2">
               <input
-                className="h-10 w-full border-b-2 pl-2 text-sm"
+                className={clsx(
+                  'h-10 w-full rounded-sm border-b-2 pl-2 text-sm focus:outline-2 focus:outline-blue-400',
+                  errors.password &&
+                    'text-red-600 placeholder-red-700 ring-1 ring-red-500 border-b-0 focus:outline-2 focus:outline-red-500'
+                )}
                 type="password"
                 placeholder="Password"
                 {...register('password', { required: true })}
               />
             </div>
 
-            {errors.password && <span>This field is required</span>}
+            {errors.password && (
+              <span className="text-sm text-red-600">
+                This field is required
+              </span>
+            )}
 
             <button
               type="submit"
@@ -91,7 +112,7 @@ const Login: NextPage = () => {
         </div>
         <div className="slides bg-blue-700 w-2/4 relative rounded-r">
           <div className="absolute left-0 top-0 w-full h-full bg-[url('/images/login-image.svg')] bg-no-repeat bg-[-25rem_-12rem] opacity-10"></div>
-          <div className="absolute w-full h-full bg-[url('/images/login-image.svg')] bg-no-repeat bg-cover bg-[0rem_4rem]"></div>
+          <div className="absolute w-full h-full bg-[url('/images/login-image.svg')] bg-no-repeat bg-cover bg-[0_70px]"></div>
         </div>
       </div>
     </div>
